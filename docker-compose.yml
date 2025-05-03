@@ -1,0 +1,33 @@
+version: '3.9'
+
+services:
+  web:
+    build: .
+    container_name: flask-stock-analyzer-web
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+    command: >
+      bash -c "flask db upgrade &&
+               gunicorn -c gunicorn_config.py run:app"
+
+  db:
+    image: postgres:14
+    container_name: flask-stock-analyzer-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: stock_analyzer_db
+    ports:
+      - "6543:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

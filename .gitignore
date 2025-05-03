@@ -1,0 +1,23 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+
+# Environment variables
+.env
+
+# SQLite DBs or temporary local DBs
+*.db
+
+# Editor-specific
+.vscode/
+.idea/
+
+# Docker-related
+*.pid
+
+# Pytest and test cache
+.pytest_cache/
+*.log
