@@ -2,7 +2,6 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 
-
 from flask import Flask
 from .config import Config, config_manager
 
@@ -31,6 +30,8 @@ def create_app(config_name):
         load_logs(app)
 
     initialise_celery(app)
+
+    initialise_swagger(app)
 
     return app
 
@@ -68,8 +69,8 @@ def register_blueprints(app):
 
     app.register_blueprint(v1_blueprint, url_prefix="/api/v1")
 
-def load_logs(app):
 
+def load_logs(app):
     if not os.path.exists("logs"):
         os.mkdir("logs")
     file_handler = RotatingFileHandler(
@@ -86,3 +87,57 @@ def load_logs(app):
     app.logger.setLevel(logging.INFO)
     app.logger.info("app startup")
     return
+
+
+def initialise_swagger(app):
+    from flasgger import Swagger
+
+    swagger_config = {
+        "headers": [],
+        "specs": [
+            {
+                "endpoint": "apispec_1",
+                "route": "/api/v1/docs/apispec_1.json",
+                "rule_filter": lambda rule: True,
+                "model_filter": lambda tag: True,
+            }
+        ],
+        "static_url_path": "/flasgger_static",
+        "swagger_ui": True,
+        "specs_route": "/api/docs/",
+        "swagger_ui_oauth2": {},
+        "swagger_ui_config": {
+            "tryItOutEnabled": True,
+            "docExpansion": "none",
+        }
+    }
+
+    swagger_template = {
+        "swagger": "2.0",
+        "info": {
+            "title": "Flask Stock Analyzer API",
+            "description": "A RESTful API to analyze and track stock data with user authentication.",
+            "contact": {
+                "name": "Parth Parikh",
+                "email": "parthparikh02@gmail.com",
+            },
+            "version": "1.0.0"
+        },
+        "basePath": "/api/v1",
+        "schemes": [
+            "http",
+        ],
+        "securityDefinitions": {
+            "cookieAuth": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "session",
+                "description": "Session cookie for logged-in users"
+            }
+        },
+        "security": [
+            {"cookieAuth": []}
+        ]
+    }
+
+    Swagger(app, config=swagger_config, template=swagger_template)
