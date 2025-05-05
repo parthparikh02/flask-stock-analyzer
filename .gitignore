@@ -21,3 +21,7 @@ venv/
 # Pytest and test cache
 .pytest_cache/
 *.log
+
+
+# Celery
+celerybeat-schedule
