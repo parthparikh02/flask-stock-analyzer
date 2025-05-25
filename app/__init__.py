@@ -5,7 +5,9 @@ import os
 from flask import Flask
 from .config import Config, config_manager
 
-from .extensions import db, migrate, login_manager
+from .extensions import db, migrate, login_manager, limiter
+from .utils.constants import HttpStatusCode
+from .utils.common import send_json_response
 
 from .celery_tasks.config import make_celery
 
@@ -32,6 +34,17 @@ def create_app(config_name):
     initialise_celery(app)
 
     initialise_swagger(app)
+
+    # Register rate limit error handler
+    @app.errorhandler(429)
+    def ratelimit_handler(request_limit):
+        limit_string = request_limit.limit.limit
+        time_limit = str(limit_string).split('per')[1]
+        return send_json_response(
+            response_status=False,
+            message_key="Request limit reached: Please try after {0}s".format(time_limit),
+            http_status=HttpStatusCode.TOO_MANY_REQUESTS.value
+        )
 
     return app
 
@@ -62,6 +75,7 @@ def initialise_flask_login(app):
 def register_extensions(app):
     db.init_app(app)
     migrate.init_app(app, db)
+    limiter.init_app(app)
 
 
 def register_blueprints(app):
